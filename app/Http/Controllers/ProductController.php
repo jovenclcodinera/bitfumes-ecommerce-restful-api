@@ -6,17 +6,21 @@ use App\Http\Requests\ProductRequest;
 use App\Http\Resources\Product\ProductCollection;
 use App\Http\Resources\Product\ProductResource;
 use App\Models\Product;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ProductController extends Controller
 {
+    private $productService;
+
     /**
      * ProductController constructor.
      */
-    public function __construct()
+    public function __construct(ProductService $productService)
     {
         $this->middleware('auth:api')->except('index', 'show');
+        $this->productService = $productService;
     }
 
     /**
@@ -93,6 +97,7 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+        $this->productService->checkProductUser($product);
         $request['detail'] = $request->description;
         unset($request['description']);
 
@@ -117,6 +122,8 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        $this->productService->checkProductUser($product);
+
         if ($product->delete())
             return response(null, Response::HTTP_NO_CONTENT);
         else
